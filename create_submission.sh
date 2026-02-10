@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
-SUBMISSION_NAME="${1:-submission}"
+SUBMISSION_NAME="submission"
 DEST_DIR="${ROOT_DIR}/${SUBMISSION_NAME}"
 
 FILES=(
