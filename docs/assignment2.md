@@ -1,4 +1,4 @@
-# CS 248A Assignment 2 (Due Feb 13, 11:59pm)
+# CS 248A Assignment 2 (Due Feb 13, 11:59pm PST)
 
 ## Environment Setup
 
@@ -44,7 +44,40 @@ These two tasks are independent, so you can work on them in any order.
     1. Please open [the differentiable texture notebook](../notebooks/assignment2-part2/volume-recovery/diff-texture.ipynb) and follow the instructions in the notebook. We'll walk you through the basics of automatic differentiation in Slang and how to implement a differentiable texture.
     2. Please open [the volume recovery notebook](../notebooks/assignment2-part2/volume-recovery/volume-recovery.ipynb) and follow the instructions in the notebook. In this notebook, you'll implement a differentiable volume renderer and use it to recover volume data from a set of 2D images.
 
-### Grading and Handin
+### Grading
+Total 100 points
+- Correctness: 80 Points
+- Interview: 20 Points
+
+The 80 points for correctness are divided as follows:
+
+* **Part 1 (40 Points)**
+    * Textue Mapping (25 Points)
+        * Point Sampling (2 Points)
+        *  Bilinear Sampling (3 Points)
+        *  Mipmap Generation (5 Points)
+        *  Determining Mip Level (10 Points)
+        *  Trilinear Sampling (5 Points)
+    *  Volume Rendering (15 Points)
+        * Volume Sampling (5 Points)
+        * Accumulate Color (10 Points)
+            * Radiance Emission (5 Points)
+            * Radiance Absorption (5 Points)
+
+* **Part 2 (40 Points)**
+    * Neural Texture (5 Points)
+        * Positional Encoding (5 Points)
+    * Differentiable Texture (25 Points)
+        * Sample Bilinear Backward (10 Points)
+        * Upsampling (10 Points)
+            * Forward (5 Points)
+            * Backward (5 Points)
+        * Optimization (5 Points)
+    * Volume Recovery (10 Points)
+        * Volume Sampling Backward (5 Points)
+        * Optimization (5 Points)
+
+### Handin
 
 Assignment handin will be done on Gradescope.
 
