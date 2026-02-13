@@ -24,13 +24,10 @@ public struct Volume
      */
     public Optional<RayHitResult> hit(Ray ray, SharedTexture3DBuffer<float4> volumeTexBuf)
     {
-        // TODO: Student implementation starts here.
+        
 
-        // TODO: Student implementation ends here.
 
-        return Optional<RayHitResult>();
-    }
-
+}
     /**
      * Get the uvw coordinates of a point in local space.
      * @param p The point in world space.

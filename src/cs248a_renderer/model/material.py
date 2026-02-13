@@ -50,6 +50,24 @@ class MaterialField[T]:
         textures = [base_texture]
         # TODO: Student implementation starts here.
         
+        textures_level = base_texture
+        for level in range(1, self.MAX_MIP_LEVELS):
+            # Downsample the texture by a factor of 2 using bilinear filtering.
+            new_width = max(1, textures_level.shape[1] // 2)
+
+            new_width = max(1, textures_level.shape[1] // 2)
+            new_height = max(1, textures_level.shape[0] // 2)
+            if new_width == textures_level.shape[1] and new_height == textures_level.shape[0]:
+                break
+            # Use PIL to resize the texture with bilinear filtering.
+            pil_img = Image.fromarray((textures_level * 255).astype(np.uint8))
+            pil_img = pil_img.resize((new_width, new_height), resample=Image.BILINEAR)
+            textures_level = np.array(pil_img).astype(np.float32) / 255.0
+            textures.append(textures_level) 
+
+            
+
+
         # TODO: Student implementation ends here.
 
         self.textures = textures

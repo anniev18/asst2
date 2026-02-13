@@ -20,8 +20,41 @@ public static float DENSITY_SCALE = 5.0;
 public float4 volumeSample(float2 uv, RendererUniform uniforms, float tMax, float4 primColor)
 {
     // TODO: Student implementation starts here.
+    Ray ray = uniforms.camera.generateRay(uv);
+    float closestT = tMax;
+    bool hitRay = false;
+    Volume closestVolume;
+    RayHitResult result;
 
-    return primColor;
+    for (uint i = 0; i < uniforms.surfaceVolumeCount; i++)
+    {
+        Volume volume = uniforms.surfaceVolumeBuf[i];
+        Optional<RayHitResult> hitResult = volume.hit(ray, uniforms.surfaceVolumeTexBuf);
+        if (hitResult.hasValue)
+        {
+            RayHitResult resultVal = hitResult.value;
+            if (resultVal.t < closestT)
+            {
+                closestT = resultVal.t;
+                closestVolume = volume;
+                result = resultVal;
+                hitRay = true;
+            }
+        }
+    }
+
+    if (!hitRay)
+    {
+        return primColor;
+    }
+
+    float3 hitPointWorld = ray.origin + result.t * ray.direction;
+    float3 hitPointLocal = mul(closestVolume.invModelMatrix, float4(hitPointWorld, 1.0)).xyz;
+    float3 uvw = closestVolume.getUVW(hitPointLocal);
+    float4 volumeColor = uniforms.surfaceVolumeTexBuf.pointSample(closestVolume.tex, uvw);
+
+    float alpha = saturate(volumeColor.a);
+    return float4(lerp(primColor.rgb, volumeColor.rgb, alpha), 1.0);
     
     // TODO: Student implementation ends here.
 }
@@ -62,6 +95,8 @@ public float4 accumulateColor<let N : uint>(
     DiffTexture3D<float, 4> data)
 {
     // TODO: Student implementation starts here.
+    
+
 
     return float4(1.0, 0.0, 1.0, 1.0);
 

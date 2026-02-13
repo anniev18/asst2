@@ -54,7 +54,35 @@ public Optional<RayMeshIntersectionResult> rayMeshIntersection(Ray ray, Renderer
     // IMPORTANT CHANGE: We need to store the hit triangle.
 
     // TODO: Student implementation starts here.
-    
+    float closestT = float.maxValue;
+
+    bool shouldRunBruteForce = true;
+    if (uniforms.useBVH)
+    {
+        Optional<BVH<Triangle>.HitResult> bvhResult = uniforms.bvh.hit(ray);
+        if (bvhResult.hasValue)
+        {
+            result = Optional<RayHitResult>(bvhResult.value.rayHitResult);
+            hitTriangle = Optional<Triangle>(bvhResult.value.primitive);
+            shouldRunBruteForce = false;
+        }
+    }
+
+    if (shouldRunBruteForce)
+    {
+        for (uint i = 0; i < uniforms.triangleCount; i++)
+        {
+            Triangle triangle = uniforms.triangleBuf[i];
+            Optional<RayHitResult> hitResult = triangle.hit(ray);
+            if (hitResult.hasValue && hitResult.value.t < closestT)
+            {
+                closestT = hitResult.value.t;
+                result = Optional<RayHitResult>(hitResult.value);
+                hitTriangle = Optional<Triangle>(triangle);
+            }
+        }
+    }
+
     // TODO: Student implementation ends here.
 
     if (result.hasValue && hitTriangle.hasValue)
@@ -76,10 +104,12 @@ public float getLevel(float2 uv, RendererUniform uniforms, Triangle triangle, fl
     float level = 0.0;
 
     // TODO: Student implementation starts here.
+    
 
-    return level;
 
     // TODO: Student implementation ends here.
+
+    return max(level, 0.0);
 }
 
 public float4 shadeTriangle(float2 uv, RendererUniform uniforms, Triangle triangle, Ray ray, float2 tex_uv, float3 normal, float3 barycentricCoord)

@@ -34,6 +34,31 @@ public struct Triangle : IBoundingBox, IRayCastable
         float w = 0.0;
 
         // TODO: Student implementation starts here.
+        float3 v0 = vertices[0];
+        float3 v1 = vertices[1];
+        float3 v2 = vertices[2];
+
+        float3 e1 = v1 - v0;
+        float3 e2 = v2 - v1;
+        float3 e3 = v0 - v2;
+
+        float3 n = cross(e1, e2);
+        float area = length(n) / 2.0;
+        if (area < EPSILON)
+        {
+            // degenerate triangle
+            return float3(1.0 / 3.0);
+        }
+        float3 c1 = p - v0;
+        float3 c2 = p - v1;
+        float3 c3 = p - v2;
+        float area1 = length(cross(e1, c1)) / 2.0;
+        float area2 = length(cross(e2, c2)) / 2.0;
+        float area3 = length(cross(e3, c3)) / 2.0;
+
+        u = area2 / area;
+        v = area3 / area;
+        w = area1 / area;
 
         // TODO: Student implementation ends here.
 
@@ -78,8 +103,47 @@ public struct Triangle : IBoundingBox, IRayCastable
     public Optional<RayHitResult> hit(Ray ray)
     {
         // TODO: Student implementation starts here.
+        float3 o = ray.origin;
+        float3 d = ray.direction;
+        float2 trange = ray.tRange;
 
-        return Optional<RayHitResult>();
+        // find intersection with triangle plane
+        float3 v0 = vertices[0];
+        float3 v1 = vertices[1];
+        float3 v2 = vertices[2];
+
+        float3 e1 = v1 - v0;
+        float3 e2 = v2 - v1;
+        float3 e3 = v0 - v2;
+
+        float3 n = cross(e1, e2);
+        float t = (dot(n, v0) - dot(n, o)) / dot(n, d);
+
+        if (t < trange.x || t > trange.y)
+        {
+            return Optional<RayHitResult>();
+        }
+
+        float3 x = o + t * d;
+
+        // inside-outside test
+        float3 c1 = x - v0;
+        float3 c2 = x - v1;
+        float3 c3 = x - v2;
+
+        float L1 = dot(cross(e1, c1), n);
+        float L2 = dot(cross(e2, c2), n);
+        float L3 = dot(cross(e3, c3), n);
+
+        if (L1 < 0 || L2 < 0 || L3 < 0)
+        {
+            return Optional<RayHitResult>();
+        }
+
+        RayHitResult result;
+        result.t = t;
+        result.normal = normalize(n);
+        return Optional<RayHitResult>(result);
 
         // TODO: Student implementation ends here.
     }
