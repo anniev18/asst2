@@ -65,8 +65,9 @@ class SceneManager:
         logger.info(f"Loading volume from {volume_path}")
         volume_data: np.ndarray = np.load(volume_path)
         if volume_data.ndim == 3:
-            volume_data = np.zeros(volume_data.shape + (4,), dtype=np.float32)
-            volume_data[..., 3] = volume_data  # Set alpha channel
+            density = volume_data.astype(np.float32, copy=False)
+            volume_data = np.zeros(density.shape + (4,), dtype=np.float32)
+            volume_data[..., 3] = density  # Set alpha channel
             volume_data[..., 0:3] = 0.0  # Set RGB channels
         elif volume_data.ndim != 4:
             raise ValueError(

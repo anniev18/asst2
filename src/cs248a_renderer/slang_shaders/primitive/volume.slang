@@ -24,6 +24,56 @@ public struct Volume
      */
     public Optional<RayHitResult> hit(Ray ray, SharedTexture3DBuffer<float4> volumeTexBuf)
     {
+        float2 t_hit = this.bound.hit(ray);
+        if (t_hit.x < 0.0 && t_hit.y < 0.0)
+            return Optional<RayHitResult>();
+
+        float t = max(t_hit.x, ray.tRange.x);
+        float t_end = min(t_hit.y, ray.tRange.y);
+
+        float3 p = ray.origin + t * ray.direction;
+        float3 localP = mul(invModelMatrix, float4(p, 1)).xyz;
+        float3 uvw = getUVW(localP);
+        float prev = volumeTexBuf.trilinearSample(tex, uvw).w;
+
+        t += STEP_SIZE;
+
+        while (t < t_end)
+        {
+            p = ray.origin + t * ray.direction;
+            localP = mul(invModelMatrix, float4(p, 1)).xyz;
+            uvw = getUVW(localP);
+            float d = volumeTexBuf.trilinearSample(tex, uvw).w; 
+
+            if (prev < DENSITY_THRESHOLD && d >= DENSITY_THRESHOLD)
+            {
+                float3 e = float3(FINITE_DIFF_DELTA, 0, 0);
+                float dx = volumeTexBuf.trilinearSample(tex, getUVW(localP + e)).w -
+                           volumeTexBuf.trilinearSample(tex, getUVW(localP - e)).w;
+                e = float3(0, FINITE_DIFF_DELTA, 0);
+                float dy = volumeTexBuf.trilinearSample(tex, getUVW(localP + e)).w -
+                           volumeTexBuf.trilinearSample(tex, getUVW(localP - e)).w;
+                e = float3(0, 0, FINITE_DIFF_DELTA);
+                float dz = volumeTexBuf.trilinearSample(tex, getUVW(localP + e)).w -
+                           volumeTexBuf.trilinearSample(tex, getUVW(localP - e)).w;
+
+                float3 n_local = -float3(dx, dy, dz);
+                float3 n_world = normalize(mul(float3x3(
+                                                   modelMatrix[0].xyz,
+                                                   modelMatrix[1].xyz,
+                                                   modelMatrix[2].xyz
+            ), n_local));
+
+                RayHitResult r;
+                r.t = t;
+                r.normal = n_world;
+                return Optional<RayHitResult>(r);
+            }
+
+            prev = d;
+            t += STEP_SIZE;
+        }
+        return Optional<RayHitResult>();
         
 
 

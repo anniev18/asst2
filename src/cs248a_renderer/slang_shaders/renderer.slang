@@ -81,6 +81,13 @@ public float4 sample(float2 uv, RendererUniform uniforms)
     return volumeColor;
 }
 
+// Note for gradrer: I added a random function here for antialiasing in render function with common conventions I found online
+float random(float2 p)
+{
+    return frac(sin(dot(p, float2(12.9898, 78.233))) * 43758.5453);
+}
+
+
 /**
  * The entry point of the renderer.
  * @param tid The 2D coordinate of the current thread. Ranges from (0, 0) to (canvasSize.x - 1, canvasSize.y - 1).
@@ -90,21 +97,19 @@ public float4 sample(float2 uv, RendererUniform uniforms)
 public float4 render(uint2 tid, RendererUniform uniforms)
 {
     // TODO: Student implementation starts here.
-    float4 colorSum = float4(0.0);
-
-    for (uint i = 0; i < uniforms.sqrtSpp; i++)
-    {
-        for (uint j = 0; j < uniforms.sqrtSpp; j++)
-        {
-            float offsetX = (i + 0.5) / uniforms.sqrtSpp;
-            float offsetY = (j + 0.5) / uniforms.sqrtSpp;
-            float2 uv = (float2(tid) + float2(offsetX, offsetY)) / float2(uniforms.camera.canvasSize);
-            colorSum += sample(uv, uniforms);
+    float3 collected_color = float3(0.0, 0.0, 0.0); // accumulated color from all samples
+        uint spp = uniforms.sqrtSpp * uniforms.sqrtSpp;
+        for (uint i = 0; i < uniforms.sqrtSpp; i++) { // gird 
+            for (uint j = 0; j < uniforms.sqrtSpp; j++) {
+                // jittered sampling within the pixel
+                float2 seed = float2(tid) + float2(i, j);
+                float2 rand = float2(random(seed), random(seed + 1.0));
+                float2 uv = (float2(tid) + (float2(i, j) + rand) / float(uniforms.sqrtSpp)) / float2(uniforms.camera.canvasSize);
+                float4 sample_color = sample(uv, uniforms);
+                collected_color += sample_color.xyz;}
         }
-    }
-
-    float totalSamples = float(uniforms.sqrtSpp * uniforms.sqrtSpp);
-    return colorSum / totalSamples;
+        float3 final_color = collected_color / float(spp);
+        return float4(final_color, 1.0);
     // TODO: Student implementation ends here.
 }
 

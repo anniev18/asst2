@@ -103,13 +103,18 @@ public struct SharedTexture3DBuffer<T>
     public T pointSample(SharedTexture3D tex, float3 uvw)
     {
         // TODO: Student implementation starts here.
-        uint3 maxCoord = tex.size - uint3(1);
-        float3 clampedUVW = saturate(uvw);
-        uint3 voxelCoord = uint3(clampedUVW * float3(maxCoord));
-
-        return getBufferValue(tex, voxelCoord);
+        return getBufferValue(tex, uint3(
+            min(uint(tex.size.x - 1), uint(uvw.x * float(tex.size.x))),
+            min(uint(tex.size.y - 1), uint(uvw.y * float(tex.size.y))),
+            min(uint(tex.size.z - 1), uint(uvw.z * float(tex.size.z)))
+        ));
 
         // TODO: Student implementation ends here.
+    }
+        // Note for grader: found on ed
+    T lerpT<T : IFloat>(T a, T b, float t)
+    {
+        return a + (b - a) * T(t);
     }
 
     /**
@@ -121,33 +126,31 @@ public struct SharedTexture3DBuffer<T>
     public T trilinearSample(SharedTexture3D tex, float3 uvw)
     {
         // TODO: Student implementation starts here.
-        uint3 maxCoord = tex.size - uint3(1);
-        float3 xyz = saturate(uvw) * float3(maxCoord);
-        int3 base = int3(floor(xyz));
-        int3 next = min(base + int3(1), int3(maxCoord));
-        float3 f = xyz - float3(base);
+        float3 pos = uvw * (float3(tex.size) - 1);
+        uint3 base = uint3(pos);
+        float3 f = pos - float3(base);
 
-        // get 8 nearest points
-        T first = getBufferValue(tex, uint3(base));
-        T second = getBufferValue(tex, uint3(next.x, base.y, base.z));
-        T third = getBufferValue(tex, uint3(base.x, next.y, base.z));
-        T fourth = getBufferValue(tex, uint3(next.x, next.y, base.z));
+        uint3 base1 = min(base + 1, tex.size - 1);
 
-        T fifth = getBufferValue(tex, uint3(base.x, base.y, next.z));
-        T sixth = getBufferValue(tex, uint3(next.x, base.y, next.z));
-        T seventh = getBufferValue(tex, uint3(base.x, next.y, next.z));
-        T eigth = getBufferValue(tex, uint3(next));
+        T c000 = getBufferValue(tex, base);
+        T c100 = getBufferValue(tex, uint3(base1.x, base.y, base.z));
+        T c010 = getBufferValue(tex, uint3(base.x, base1.y, base.z));
+        T c110 = getBufferValue(tex, uint3(base1.x, base1.y, base.z));
+        T c001 = getBufferValue(tex, uint3(base.x, base.y, base1.z));
+        T c101 = getBufferValue(tex, uint3(base1.x, base.y, base1.z));
+        T c011 = getBufferValue(tex, uint3(base.x, base1.y, base1.z));
+        T c111 = getBufferValue(tex, base1);
 
-        // trilinear interpolation
-        T c00 = first + (second - first) * T(f.x);
-        T c10 = third + (fourth - third) * T(f.x);
-        T c01 = fifth + (sixth - fifth) * T(f.x);
-        T c11 = seventh + (eigth - seventh) * T(f.x);
+        // trilinear
+        T c00 = lerpT(c000, c100, f.x);
+        T c10 = lerpT(c010, c110, f.x);
+        T c01 = lerpT(c001, c101, f.x);
+        T c11 = lerpT(c011, c111, f.x);
 
-        T c0 = c00 + (c10 - c00) * T(f.y);
-        T c1 = c01 + (c11 - c01) * T(f.y);
+        T c0 = lerpT(c00, c10, f.y);
+        T c1 = lerpT(c01, c11, f.y);
 
-        return c0 + (c1 - c0) * T(f.z);
+        return lerpT(c0, c1, f.z);
 
         // TODO: Student implementation ends here.
     }
