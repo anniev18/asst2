@@ -83,6 +83,7 @@ public float4 accumulateColor<let N : uint>(
     float3 boundSize = volumeBound.size();
 
     float3 accumColor = float3(0.0);
+    float accumAlpha = 0.0;
     float transmittance = 1.0;
     float t = tMin;
 
@@ -101,6 +102,7 @@ public float4 accumulateColor<let N : uint>(
         float alpha = saturate(density * densityScale * stepSize);
         float weight = transmittance * alpha;
         accumColor += weight * sampleColor.rgb;
+        accumAlpha += weight;
         transmittance *= (1.0 - alpha);
 
         if (transmittance < EPSILON)
@@ -109,6 +111,7 @@ public float4 accumulateColor<let N : uint>(
     }
 
     accumColor += transmittance * backgroundColor.rgb;
-    return float4(accumColor, backgroundColor.a);
+    accumAlpha += transmittance * backgroundColor.a;
+    return float4(accumColor, accumAlpha);
     // TODO: Student implementation ends here.
 }

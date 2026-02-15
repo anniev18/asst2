@@ -97,19 +97,20 @@ float random(float2 p)
 public float4 render(uint2 tid, RendererUniform uniforms)
 {
     // TODO: Student implementation starts here.
-    float3 collected_color = float3(0.0, 0.0, 0.0); // accumulated color from all samples
-        uint spp = uniforms.sqrtSpp * uniforms.sqrtSpp;
-        for (uint i = 0; i < uniforms.sqrtSpp; i++) { // gird 
-            for (uint j = 0; j < uniforms.sqrtSpp; j++) {
-                // jittered sampling within the pixel
-                float2 seed = float2(tid) + float2(i, j);
-                float2 rand = float2(random(seed), random(seed + 1.0));
-                float2 uv = (float2(tid) + (float2(i, j) + rand) / float(uniforms.sqrtSpp)) / float2(uniforms.camera.canvasSize);
-                float4 sample_color = sample(uv, uniforms);
-                collected_color += sample_color.xyz;}
+    float4 collectedColor = float4(0.0, 0.0, 0.0, 0.0);
+    uint spp = uniforms.sqrtSpp * uniforms.sqrtSpp;
+    for (uint i = 0; i < uniforms.sqrtSpp; i++)
+    {
+        for (uint j = 0; j < uniforms.sqrtSpp; j++)
+        {
+            float2 seed = float2(tid) + float2(i, j);
+            float2 rand = float2(random(seed), random(seed + 1.0));
+            float2 uv = (float2(tid) + (float2(i, j) + rand) / float(uniforms.sqrtSpp)) / float2(uniforms.camera.canvasSize);
+            float4 sampleColor = sample(uv, uniforms);
+            collectedColor += sampleColor;
         }
-        float3 final_color = collected_color / float(spp);
-        return float4(final_color, 1.0);
+    }
+    return collectedColor / float(spp);
     // TODO: Student implementation ends here.
 }
 
